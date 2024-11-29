@@ -1,0 +1,33 @@
+id: data-collection
+namespace: social_media_project
+tasks:
+  - id: fetch-data
+    type: io.kestra.core.tasks.scripts.Python
+    description: "Fetch metrics data from APIs or generate mock data"
+    inputs:
+      - platform: "{{ inputs.platform }}"  # Input variable for the platform
+    scripts:
+      - |
+        import os
+        import random
+        import json
+
+        platform = "{{ inputs.platform }}"
+        reach = random.randint(100, 1000)  # Mock reach data
+        print(json.dumps({"platform": platform, "reach": reach}))
+
+    outputFiles:
+      - fetch_output.json
+
+  - id: save-to-database
+    type: io.kestra.core.tasks.scripts.Http
+    description: "Save metrics data to backend"
+    method: POST
+    url: "http://localhost:5000/metrics"
+    headers:
+      Content-Type: "application/json"
+    body: |
+      {{
+        "platform": outputs['fetch-data'].body.platform,
+        "reach": outputs['fetch-data'].body.reach
+      }}

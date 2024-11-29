@@ -1,0 +1,23 @@
+id: analytics-pipeline
+namespace: social_media_project
+tasks:
+  - id: fetch-metrics
+    type: io.kestra.core.tasks.scripts.Http
+    description: "Fetch all metrics from the database"
+    method: GET
+    url: "http://localhost:5000/metrics"
+    headers:
+      Content-Type: "application/json"
+
+  - id: process-metrics
+    type: io.kestra.core.tasks.scripts.Python
+    description: "Analyze the metrics data for insights"
+    inputs:
+      metrics_data: "{{ outputs['fetch-metrics'].body }}"
+    scripts:
+      - |
+        import json
+
+        metrics_data = {{ inputs.metrics_data }}
+        total_reach = sum(metric['reach'] for metric in metrics_data)
+        print(json.dumps({"total_reach": total_reach}))
